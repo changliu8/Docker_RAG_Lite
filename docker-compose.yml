@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    entrypoint:
+      ["/bin/sh", "-c", "ollama serve & sleep 3 && ollama pull llama3 && wait"]
+
+  app:
+    build: ./app
+    container_name: rag-app
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - ./app:/app
+    working_dir: /app
+    command: ["python", "simple_version.py", "What is 5G?"]
+
+volumes:
+  ollama_data:
