@@ -67,9 +67,21 @@ def response(query, data, k=10, score_threshold=0.8):
     response = answer_question(query, retrieved_context, OLLAMA_URL,data)
     return response
 
+def wait_for_llama_model(base_url, retries=25, delay=20):
+    for i in range(retries):
+        try:
+            res = requests.get(f"{base_url}/api/tags")
+            if res.ok and 'llama3' in res.text:
+                print("Model is ready.")
+                return
+        except requests.RequestException:
+            pass
+        print(f"Waiting for model to be available... attempt {i+1}")
+        time.sleep(delay)
+    raise TimeoutError("Timed out waiting for the model.")
 
 if __name__ == "__main__":
-    time.sleep(10)
+    wait_for_model()
     model = "llama3"
     query = sys.argv[1]
     data = {"model":model, "prompt":query, "stream":False}
